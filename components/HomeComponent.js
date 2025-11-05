@@ -1,4 +1,3 @@
-// ...existing code...
 import React, { Component } from 'react';
 import { View, ScrollView, Text, ImageBackground, ActivityIndicator, StyleSheet } from 'react-native';
 import { Card } from 'react-native-elements';
@@ -6,6 +5,8 @@ import { Card } from 'react-native-elements';
 // redux
 import { baseUrl } from '../shared/baseUrl';
 import { connect } from 'react-redux';
+
+import Loading from './LoadingComponent';
 
 const mapStateToProps = (state) => {
   return {
@@ -18,6 +19,25 @@ const mapStateToProps = (state) => {
 
 class RenderItem extends Component {
   render() {
+    // handle loading / error passed from parent
+    if (this.props.isLoading) {
+      return (
+        <Card containerStyle={styles.card}>
+          <Card.Title style={styles.cardTitle}>{this.props.title || ''}</Card.Title>
+          <Card.Divider />
+          <Loading />
+        </Card>
+      );
+    } else if (this.props.errMess) {
+      return (
+        <Card containerStyle={styles.card}>
+          <Card.Title style={styles.cardTitle}>{this.props.title || ''}</Card.Title>
+          <Card.Divider />
+          <Text style={{ margin: 16, color: 'red' }}>{this.props.errMess}</Text>
+        </Card>
+      );
+    }
+
     const item = this.props.item;
     if (!item) return <View />;
 
@@ -45,17 +65,6 @@ class RenderItem extends Component {
 }
 
 class Home extends Component {
-  renderLoadingOrError(source) {
-    if (!source) return null;
-    if (source.isLoading) {
-      return <ActivityIndicator size="large" style={{ margin: 16 }} />;
-    }
-    if (source.errMess) {
-      return <Text style={{ margin: 16, color: 'red' }}>{source.errMess}</Text>;
-    }
-    return null;
-  }
-
   render() {
     // safe access to arrays inside reducer objects
     const dishesArr = (this.props.dishes && Array.isArray(this.props.dishes.dishes))
@@ -74,12 +83,24 @@ class Home extends Component {
 
     return (
       <ScrollView contentContainerStyle={styles.scroll}>
-        {this.renderLoadingOrError(this.props.dishes)}
-        <RenderItem item={dish} />
-        {this.renderLoadingOrError(this.props.promotions)}
-        <RenderItem item={promo} />
-        {this.renderLoadingOrError(this.props.leaders)}
-        <RenderItem item={leader} />
+        <RenderItem
+          title="Dish"
+          item={dish}
+          isLoading={this.props.dishes && this.props.dishes.isLoading}
+          errMess={this.props.dishes && this.props.dishes.errMess}
+        />
+        <RenderItem
+          title="Promotion"
+          item={promo}
+          isLoading={this.props.promotions && this.props.promotions.isLoading}
+          errMess={this.props.promotions && this.props.promotions.errMess}
+        />
+        <RenderItem
+          title="Leader"
+          item={leader}
+          isLoading={this.props.leaders && this.props.leaders.isLoading}
+          errMess={this.props.leaders && this.props.leaders.errMess}
+        />
       </ScrollView>
     );
   }
@@ -98,7 +119,8 @@ const styles = StyleSheet.create({
   },
   title: { color: '#fff', fontSize: 26, fontWeight: '700', textAlign: 'center' },
   designation: { color: '#fff', fontSize: 14, marginTop: 4 },
-  description: { margin: 10, fontSize: 14, lineHeight: 18 }
+  description: { margin: 10, fontSize: 14, lineHeight: 18 },
+  cardTitle: { textAlign: 'center', fontSize: 16 }
 });
 
 export default connect(mapStateToProps)(Home);

@@ -6,6 +6,8 @@ import { baseUrl } from '../shared/baseUrl';
 // redux
 import { connect } from 'react-redux';
 
+import Loading from './LoadingComponent';
+
 function History() {
   return (
     <Card containerStyle={[styles.card, styles.cardTop]}>
@@ -28,44 +30,87 @@ function History() {
 
 const mapStateToProps = (state) => {
   return {
-    leaders: state.leaders
+    leaders: state.leaders || {}
   }
 };
+
+class RenderLeadership extends Component {
+  renderLeaderItem = ({ item }) => {
+    if (!item) return null;
+    return (
+      <ListItem containerStyle={{ paddingVertical: 8, paddingHorizontal: 4, borderBottomWidth: 0 }}>
+        <View style={styles.row}>
+          <Avatar rounded source={{ uri: baseUrl + item.image }} />
+          <View style={styles.content}>
+            <Text style={styles.itemTitle}>{item.name}</Text>
+            <Text style={styles.itemSubtitle}>{item.description}</Text>
+          </View>
+        </View>
+      </ListItem>
+    );
+  };
+
+  render() {
+    const { leaders, isLoading, errMess } = this.props;
+
+    if (isLoading) {
+      return (
+        <Card containerStyle={[styles.card, styles.cardBottom]}>
+          <Card.Title style={styles.cardTitle}>Corporate Leadership</Card.Title>
+          <Card.Divider />
+          <Loading />
+        </Card>
+      );
+    } else if (errMess) {
+      return (
+        <Card containerStyle={[styles.card, styles.cardBottom]}>
+          <Card.Title style={styles.cardTitle}>Corporate Leadership</Card.Title>
+          <Card.Divider />
+          <Text style={{ margin: 10, color: 'red' }}>{errMess}</Text>
+        </Card>
+      );
+    } else {
+      const data = Array.isArray(leaders) ? leaders : [];
+      return (
+        <Card containerStyle={[styles.card, styles.cardBottom]}>
+          <Card.Title style={styles.cardTitle}>Corporate Leadership</Card.Title>
+          <Card.Divider />
+          <FlatList
+            data={data}
+            renderItem={this.renderLeaderItem}
+            keyExtractor={(item, index) => {
+              if (!item) return index.toString();
+              if (item.id === 0 || item.id) return item.id.toString();
+              if (item._id) return item._id.toString();
+              return item.name ? `${item.name.replace(/\s+/g, '_')}_${index}` : index.toString();
+            }}
+          />
+        </Card>
+      );
+    }
+  }
+}
 
 class About extends Component {
   constructor(props) {
     super(props);
   }
 
-  renderLeader = ({ item }) => (
-    <ListItem containerStyle={{ paddingVertical: 8, paddingHorizontal: 4, borderBottomWidth: 0 }}>
-      <View style={styles.row}>
-      <Avatar rounded source={{ uri: baseUrl + item.image }} />
-        <ListItem.Content style={styles.content}>
-          <ListItem.Title style={styles.itemTitle}>{item.name}</ListItem.Title>
-          <ListItem.Subtitle style={styles.itemSubtitle}>
-            {item.description}
-          </ListItem.Subtitle>
-        </ListItem.Content>
-      </View>
-    </ListItem>
-  );
-  
+  renderLeader = ({ item }) => null; // kept for compatibility (not used)
 
   render() {
+    const leadersState = this.props.leaders || {};
+    const leadersArray = Array.isArray(leadersState.leaders) ? leadersState.leaders : [];
+
     return (
       <ScrollView contentContainerStyle={styles.scrollBody}>
         <History />
 
-        <Card containerStyle={[styles.card, styles.cardBottom]}>
-          <Card.Title style={styles.cardTitle}>Corporate Leadership</Card.Title>
-          <Card.Divider />
-            <FlatList
-              data={this.props.leaders.leaders}
-              renderItem={this.renderLeader}
-              keyExtractor={(item) => item.id.toString()}
-            />
-        </Card>
+        <RenderLeadership
+          leaders={leadersArray}
+          isLoading={leadersState.isLoading}
+          errMess={leadersState.errMess}
+        />
       </ScrollView>
     );
   }
@@ -77,14 +122,14 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   cardTop: { marginTop: 10 },
-  cardBottom: { marginBottom: 24 },      
+  cardBottom: { marginBottom: 24 },
   cardTitle: { textAlign: 'center', fontSize: 16 },
   historyText: { margin: 8, fontSize: 14, lineHeight: 15 },
   listWrapper: { paddingHorizontal: 6 },
   row: { flexDirection: 'row', alignItems: 'center' },
-  content: { marginLeft: 8 },
+  content: { marginLeft: 8, flex: 1 },
   itemContainer: { paddingVertical: 8, paddingHorizontal: 4 },
-  itemTitle: { fontSize: 16, marginBottom: 2 },
+  itemTitle: { fontSize: 16, marginBottom: 2, fontWeight: '600' },
   itemSubtitle: { fontSize: 14, lineHeight: 16, color: '#666' },
 });
 
