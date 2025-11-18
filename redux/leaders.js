@@ -1,15 +1,40 @@
-import { act } from 'react';
 import * as ActionTypes from './ActionTypes';
 
-export const leaders = (state = { isLoading: false, errMess: null, leaders: [] }, action) => {
+const initialState = {
+  isLoading: true,
+  errMess: null,
+  leaders: []
+};
+
+export const leaders = (state = initialState, action) => {
   switch (action.type) {
-    case ActionTypes.ADD_LEADERS:
-      return { ...state, isLoading: false, errMess: null, leaders: action.payload };
     case ActionTypes.LEADERS_LOADING:
-      return { ...state, isLoading: true};
+      return {
+        ...state,
+        isLoading: true,
+        errMess: null,
+        leaders: [] // clear dữ liệu cũ khi đang loading
+      };
+
+    case ActionTypes.ADD_LEADERS:
+      return {
+        ...state,
+        isLoading: false,
+        errMess: null,
+        leaders: action.payload // thêm danh sách leaders
+      };
+
     case ActionTypes.LEADERS_FAILED:
-      return { ...state, isLoading: false, errMess: action.payload };
+      return {
+        ...state,
+        isLoading: false,
+        errMess: action.payload,
+        leaders: [] // clear danh sách khi lỗi
+      };
+
     default:
       return state;
   }
 };
+
+export default leaders;

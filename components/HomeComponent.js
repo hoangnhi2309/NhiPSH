@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import { View, ScrollView, Text, ImageBackground, ActivityIndicator, StyleSheet } from 'react-native';
 import { Card } from 'react-native-elements';
-
 // redux
 import { baseUrl } from '../shared/baseUrl';
 import { connect } from 'react-redux';
-
 import Loading from './LoadingComponent';
 
 const mapStateToProps = (state) => {
@@ -19,92 +17,92 @@ const mapStateToProps = (state) => {
 
 class RenderItem extends Component {
   render() {
-    // handle loading / error passed from parent
     if (this.props.isLoading) {
-      return (
-        <Card containerStyle={styles.card}>
-          <Card.Title style={styles.cardTitle}>{this.props.title || ''}</Card.Title>
-          <Card.Divider />
-          <Loading />
-        </Card>
-      );
+      return (<Loading />);
     } else if (this.props.errMess) {
-      return (
-        <Card containerStyle={styles.card}>
-          <Card.Title style={styles.cardTitle}>{this.props.title || ''}</Card.Title>
-          <Card.Divider />
-          <Text style={{ margin: 16, color: 'red' }}>{this.props.errMess}</Text>
-        </Card>
-      );
+      return (<Text>{this.props.errMess}</Text>);
+    } else {
+      const item = this.props.item;
+      if (item != null) {
+        return (
+          <Card containerStyle={styles.card}>
+            <ImageBackground
+              source={{ uri: baseUrl + item.image }}
+              style={styles.image}
+              imageStyle={styles.imageStyle}
+            >
+              <View style={styles.overlay}>
+                <Text style={styles.title}>{item.name}</Text>
+                {item.designation ? (
+                  <Text style={styles.designation}>{item.designation}</Text>
+                ) : null}
+              </View>
+            </ImageBackground>
+            <Text style={styles.description}>{item.description}</Text>
+          </Card>
+        );
+      }
+      return (<View />);
     }
-
-    const item = this.props.item;
-    if (!item) return <View />;
-
-    return (
-      <Card containerStyle={styles.card}>
-        {item.image ? (
-          <ImageBackground
-            source={{ uri: baseUrl + item.image }}
-            style={styles.image}
-            imageStyle={styles.imageStyle}
-            resizeMode="cover"
-          >
-            <View style={styles.overlay}>
-              <Text style={styles.title}>{item.name}</Text>
-              {item.designation ? <Text style={styles.designation}>{item.designation}</Text> : null}
-            </View>
-          </ImageBackground>
-        ) : (
-          <Text style={styles.title}>{item.name}</Text>
-        )}
-        <Text style={styles.description}>{item.description}</Text>
-      </Card>
-    );
   }
 }
 
+// ...existing code...
 class Home extends Component {
   render() {
-    // safe access to arrays inside reducer objects
-    const dishesArr = (this.props.dishes && Array.isArray(this.props.dishes.dishes))
-      ? this.props.dishes.dishes
-      : [];
-    const promosArr = (this.props.promotions && Array.isArray(this.props.promotions.promotions))
-      ? this.props.promotions.promotions
-      : [];
-    const leadersArr = (this.props.leaders && Array.isArray(this.props.leaders.leaders))
-      ? this.props.leaders.leaders
-      : [];
+    const { dishes, promotions, leaders } = this.props;
+
+    const asArray = (val) => {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (Array.isArray(val.dishes)) return val.dishes;
+      if (Array.isArray(val.promotions)) return val.promotions;
+      if (Array.isArray(val.leaders)) return val.leaders;
+      if (Array.isArray(val.items)) return val.items;
+      return [];
+    };
+
+    const dishesArr = asArray(dishes);
+    const promosArr = asArray(promotions);
+    const leadersArr = asArray(leaders);
 
     const dish = dishesArr.find(d => d && d.featured) || null;
     const promo = promosArr.find(p => p && p.featured) || null;
     const leader = leadersArr.find(l => l && l.featured) || null;
+
+    // safe isLoading / errMess extraction
+    const isDishesLoading = Boolean(dishes && dishes.isLoading);
+    const dishesErr = dishes && dishes.errMess;
+    const isPromosLoading = Boolean(promotions && promotions.isLoading);
+    const promosErr = promotions && promotions.errMess;
+    const isLeadersLoading = Boolean(leaders && leaders.isLoading);
+    const leadersErr = leaders && leaders.errMess;
 
     return (
       <ScrollView contentContainerStyle={styles.scroll}>
         <RenderItem
           title="Dish"
           item={dish}
-          isLoading={this.props.dishes && this.props.dishes.isLoading}
-          errMess={this.props.dishes && this.props.dishes.errMess}
+          isLoading={isDishesLoading}
+          errMess={dishesErr}
         />
         <RenderItem
           title="Promotion"
           item={promo}
-          isLoading={this.props.promotions && this.props.promotions.isLoading}
-          errMess={this.props.promotions && this.props.promotions.errMess}
+          isLoading={isPromosLoading}
+          errMess={promosErr}
         />
         <RenderItem
           title="Leader"
           item={leader}
-          isLoading={this.props.leaders && this.props.leaders.isLoading}
-          errMess={this.props.leaders && this.props.leaders.errMess}
+          isLoading={isLeadersLoading}
+          errMess={leadersErr}
         />
       </ScrollView>
     );
   }
 }
+// ...existing code...
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 20 },
