@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
-import { View, ScrollView, Text, ImageBackground, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ScrollView, Text, ImageBackground, StyleSheet } from 'react-native';
 import { Card } from 'react-native-elements';
 // redux
 import { baseUrl } from '../shared/baseUrl';
 import { connect } from 'react-redux';
 import Loading from './LoadingComponent';
+import * as Animatable from 'react-native-animatable';
 
 const mapStateToProps = (state) => {
   return {
@@ -47,7 +48,6 @@ class RenderItem extends Component {
   }
 }
 
-// ...existing code...
 class Home extends Component {
   render() {
     const { dishes, promotions, leaders } = this.props;
@@ -80,29 +80,36 @@ class Home extends Component {
 
     return (
       <ScrollView contentContainerStyle={styles.scroll}>
-        <RenderItem
-          title="Dish"
-          item={dish}
-          isLoading={isDishesLoading}
-          errMess={dishesErr}
-        />
-        <RenderItem
-          title="Promotion"
-          item={promo}
-          isLoading={isPromosLoading}
-          errMess={promosErr}
-        />
-        <RenderItem
-          title="Leader"
-          item={leader}
-          isLoading={isLeadersLoading}
-          errMess={leadersErr}
-        />
+        <Animatable.View animation="fadeInDown" duration={2000} delay={1000}>
+          <RenderItem
+            title="Dish"
+            item={dish}
+            isLoading={isDishesLoading}
+            errMess={dishesErr}
+          />
+        </Animatable.View>
+
+        <Animatable.View animation="fadeInRight" duration={2000} delay={1000}>
+          <RenderItem
+            title="Promotion"
+            item={promo}
+            isLoading={isPromosLoading}
+            errMess={promosErr}
+          />
+        </Animatable.View>
+
+        <Animatable.View animation="fadeInUp" duration={2000} delay={1000}>
+          <RenderItem
+            title="Leader"
+            item={leader}
+            isLoading={isLeadersLoading}
+            errMess={leadersErr}
+          />
+        </Animatable.View>
       </ScrollView>
     );
   }
 }
-// ...existing code...
 
 const styles = StyleSheet.create({
   scroll: { paddingBottom: 20 },

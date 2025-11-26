@@ -18,3 +18,19 @@ export const PROMOS_LOADING = 'PROMOS_LOADING';
 
 // favorite
 export const ADD_FAVORITE = 'ADD_FAVORITE';
+// comments
+export const postComment = (dishId, rating, author, comment) => (dispatch) => {
+  var newcmt = { dishId: dishId, rating: rating, author: author, comment: comment, date: new Date().toISOString() };
+  //dispatch(addComment(newcmt));
+  fetch(baseUrl + 'comments', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(newcmt)
+  }).then((response) => {
+      if (!response.ok) throw Error('Error ' + response.status + ': ' + response.statusText);
+      else return response.json();
+    })
+    .then((cmt) => dispatch(addComment(cmt)))
+    .catch((error) => dispatch(commentsFailed(error.message)));
+};
+export const DELETE_FAVORITE = 'DELETE_FAVORITE';

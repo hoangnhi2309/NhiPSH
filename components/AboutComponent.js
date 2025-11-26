@@ -7,6 +7,7 @@ import { baseUrl } from '../shared/baseUrl';
 import { connect } from 'react-redux';
 
 import Loading from './LoadingComponent';
+import * as Animatable from 'react-native-animatable';
 
 function History() {
   return (
@@ -31,7 +32,7 @@ function History() {
 const mapStateToProps = (state) => {
   return {
     leaders: state.leaders || {}
-  }
+  };
 };
 
 class RenderLeadership extends Component {
@@ -104,13 +105,17 @@ class About extends Component {
 
     return (
       <ScrollView contentContainerStyle={styles.scrollBody}>
-        <History />
+        <Animatable.View animation="fadeInDown" duration={2000} delay={1000}>
+          <History />
+        </Animatable.View>
 
-        <RenderLeadership
-          leaders={leadersArray}
-          isLoading={leadersState.isLoading}
-          errMess={leadersState.errMess}
-        />
+        <Animatable.View animation="fadeInUp" duration={2000} delay={1000}>
+          <RenderLeadership
+            leaders={leadersArray}
+            isLoading={leadersState.isLoading}
+            errMess={leadersState.errMess}
+          />
+        </Animatable.View>
       </ScrollView>
     );
   }

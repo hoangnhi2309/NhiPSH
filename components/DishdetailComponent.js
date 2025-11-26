@@ -1,18 +1,42 @@
 import React, { Component } from 'react';
-import { View, Text, FlatList, Alert, ScrollView, StyleSheet, ImageBackground, Modal, Button } from 'react-native';
+import { View, Text, FlatList, Alert, ScrollView, StyleSheet, ImageBackground, Modal, Button, PanResponder } from 'react-native';
 import { Card, Icon, Rating, Input } from 'react-native-elements';
 import { baseUrl } from '../shared/baseUrl';
 // redux
 import { connect } from 'react-redux';
 import { postFavorite, postComment } from '../redux/ActionCreators';
+import * as Animatable from 'react-native-animatable';
 
 class RenderDish extends Component {
   render() {
     const { dish, favorite, onPressFavorite, onPressComment } = this.props;
     if (!dish) return <View />;
 
+    // gesture recognition
+    const recognizeDrag = ({ dx }) => {
+      if (dx < -200) return 1; // right to left swipe
+      return 0;
+    };
+
+    const panResponder = PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderEnd: (e, gestureState) => {
+        if (recognizeDrag(gestureState) === 1) {
+          Alert.alert(
+            'Add Favorite',
+            'Are you sure you wish to add ' + dish.name + ' to favorite?',
+            [
+              { text: 'Cancel', onPress: () => {}, style: 'cancel' },
+              { text: 'OK', onPress: () => { favorite ? Alert.alert('Already favorite') : onPressFavorite(); } }
+            ]
+          );
+        }
+        return true;
+      }
+    });
+
     return (
-      <Card containerStyle={styles.cardContainer}>
+      <Card containerStyle={styles.cardContainer} {...panResponder.panHandlers}>
         <ImageBackground
           source={{ uri: baseUrl + dish.image }}
           style={styles.dishImage}
@@ -104,24 +128,28 @@ class Dishdetail extends Component {
 
     return (
       <ScrollView contentContainerStyle={styles.container}>
-        <RenderDish
-          dish={dish}
-          favorite={favorite}
-          onPressFavorite={() => this.markFavorite(dishId)}
-          onPressComment={this.toggleModal}
-        />
-
-        <Card containerStyle={styles.cardContainer}>
-          <Card.Title>Comments</Card.Title>
-          <Card.Divider />
-          <FlatList
-            data={comments}
-            renderItem={this.renderCommentItem}
-            keyExtractor={(item) => item.id.toString()}
-            scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+        <Animatable.View animation="fadeInDown" duration={2000} delay={1000}>
+          <RenderDish
+            dish={dish}
+            favorite={favorite}
+            onPressFavorite={() => this.markFavorite(dishId)}
+            onPressComment={this.toggleModal}
           />
-        </Card>
+        </Animatable.View>
+
+        <Animatable.View animation="fadeInUp" duration={2000} delay={1000}>
+          <Card containerStyle={styles.cardContainer}>
+            <Card.Title>Comments</Card.Title>
+            <Card.Divider />
+            <FlatList
+              data={comments}
+              renderItem={this.renderCommentItem}
+              keyExtractor={(item) => item.id.toString()}
+              scrollEnabled={false}
+              ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
+            />
+          </Card>
+        </Animatable.View>
 
         <Modal
           animationType="slide"
@@ -169,85 +197,21 @@ class Dishdetail extends Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 20
-  },
-  cardContainer: {
-    borderRadius: 6,
-    padding: 0,
-    overflow: 'hidden'
-  },
-  dishImage: {
-    width: '100%',
-    height: 150,
-    resizeMode: 'cover',
-    justifyContent: 'center'
-  },
-  imageOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    width: '100%',
-    height: '100%'
-  },
-  cardTitleText: {
-    color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-    paddingHorizontal: 12
-  },
-  description: {
-    margin: 10,
-    fontSize: 14
-  },
-  iconRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 10
-  },
-  commentRow: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: '#fff'
-  },
-  commentText: {
-    fontSize: 14,
-    marginBottom: 6
-  },
-  commentRating: {
-    alignSelf: 'flex-start',
-    marginVertical: 4
-  },
-  commentMeta: {
-    fontSize: 12,
-    color: '#555'
-  },
-  itemSeparator: {
-    height: 1,
-    backgroundColor: '#eee',
-    marginHorizontal: 12
-  },
-  modal: {
-    justifyContent: 'center',
-    margin: 20
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    backgroundColor: '#7cc',
-    textAlign: 'center',
-    color: 'white',
-    marginBottom: 20,
-    padding: 10
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 20
-  }
+  container: { paddingBottom: 20 },
+  cardContainer: { borderRadius: 6, padding: 0, overflow: 'hidden' },
+  dishImage: { width: '100%', height: 150, resizeMode: 'cover', justifyContent: 'center' },
+  imageOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.25)', width: '100%', height: '100%' },
+  cardTitleText: { color: '#fff', fontSize: 22, fontWeight: '700', textAlign: 'center', paddingHorizontal: 12 },
+  description: { margin: 10, fontSize: 14 },
+  iconRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginVertical: 10 },
+  commentRow: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff' },
+  commentText: { fontSize: 14, marginBottom: 6 },
+  commentRating: { alignSelf: 'flex-start', marginVertical: 4 },
+  commentMeta: { fontSize: 12, color: '#555' },
+  itemSeparator: { height: 1, backgroundColor: '#eee', marginHorizontal: 12 },
+  modal: { justifyContent: 'center', margin: 20 },
+  modalTitle: { fontSize: 24, fontWeight: 'bold', backgroundColor: '#7cc', textAlign: 'center', color: 'white', marginBottom: 20, padding: 10 },
+  modalButtons: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 20 }
 });
 
 const mapStateToProps = (state) => {
